@@ -1,26 +1,22 @@
-// mod-aos.js (Pure JavaScript, ready for CDN)
+// mod-aos.js (Final CDN Version)
 
-// Note: We use 'ModAOSInit' to expose the function globally.
+// Note: The function itself remains the same, but the automatic execution is removed.
 const ModAOSInit = (selector = ".mod-aos") => {
+  // The selector default is changed to match the CSS base class name
+
   // 1. Setup the Intersection Observer
-  // We only observe elements, no need for the Map or scroll tracking
   const observer = new IntersectionObserver(
     (entries, observer) => {
       entries.forEach((entry) => {
         const el = entry.target;
 
-        // Check if the element is intersecting (coming into view)
         if (entry.isIntersecting) {
-          // 💡 Trigger Reveal: Add the active class to start animation
           el.classList.add("mod-reveal-active");
-
-          // Stop observing this element once it has been animated (one-time reveal)
           observer.unobserve(el);
         }
       });
     },
     {
-      // Options: Trigger when 10% of the element is visible
       threshold: 0.1,
     }
   );
@@ -28,22 +24,14 @@ const ModAOSInit = (selector = ".mod-aos") => {
   // 2. Find all elements and set initial state
   const els = document.querySelectorAll(selector);
 
-  // We can remove the 500ms timeout now, as Intersection Observer handles timing efficiently
   els.forEach((el) => {
-    // Add the idle class to set the initial hidden state
     el.classList.add("mod-reveal-idle");
-
-    // Start observing the element
     observer.observe(el);
   });
 };
 
-// 3. Expose the function globally (Necessary for CDN use)
+// 3. Expose the function globally (CRITICAL LINE)
 window.ModAOSInit = ModAOSInit;
 
-// 4. Standard DOM Ready Check (Replaces the unreliable setTimeout/jQuery wrapper)
-document.addEventListener("DOMContentLoaded", () => {
-  // Automatically run the initialization with the default selector
-  // Your HTML page should call this if you aren't using the default selector
-  ModAOSInit();
-});
+// 4. ***REMOVE THE AUTOMATIC document.addEventListener BLOCK***
+// The user will call the function directly in their HTML.
