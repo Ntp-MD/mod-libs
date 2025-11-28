@@ -1,0 +1,24 @@
+/* --- scroll-reveal.css --- */
+
+/* 1. Base Class: Sets the transition and the initial hidden state */
+.mod-aos {
+  /* This prevents a flash of unstyled content on load */
+  visibility: hidden;
+  /* The transition settings from your JS: opacity 1s ease, transform 1s ease */
+  transition: opacity 1s ease, transform 1s ease;
+}
+
+/* 2. Idle State Class: The appearance BEFORE animation */
+.mod-reveal-idle {
+  /* Your original idleStyle logic */
+  opacity: 0;
+  transform: translateY(50px);
+}
+
+/* 3. Active State Class: The appearance AFTER animation */
+.mod-reveal-active {
+  /* Your original revealed style logic */
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
