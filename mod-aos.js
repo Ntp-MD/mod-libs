@@ -1,56 +1,49 @@
-if (AppName === "AppClient") {
-  setTimeout(() => {
-    $(() => {
-      const els = document.querySelectorAll(".mod-aos");
-      const stateMap = new Map();
-      let lastScrollY = window.scrollY;
-      const NONE_SCROLL_UP = false; // TOGGLE // --- ELIMINATE THESE JAVASCRIPT STYLE VARIABLES --- // const settings = { distants: 50, durations: 1 }; // const idleStyle = `opacity: 0; transform: translateY(${settings.distants}px);`; // const triggerStyle = `opacity ${settings.durations}s ease, transform ${settings.durations}s ease`; // ----------------------------------------------------
+// mod-aos.js (Pure JavaScript, ready for CDN)
 
-      const windowH = window.innerHeight;
+// Note: We use 'ModAOSInit' to expose the function globally.
+const ModAOSInit = (selector = ".mod-aos") => {
+  // 1. Setup the Intersection Observer
+  // We only observe elements, no need for the Map or scroll tracking
+  const observer = new IntersectionObserver(
+    (entries, observer) => {
+      entries.forEach((entry) => {
+        const el = entry.target;
 
-      els.forEach((el) => {
-        // 💡 NEW: Apply the base and idle classes
-        el.classList.add("mod-reveal-idle");
-        // Note: The base class 'content' should already be on the elements
+        // Check if the element is intersecting (coming into view)
+        if (entry.isIntersecting) {
+          // 💡 Trigger Reveal: Add the active class to start animation
+          el.classList.add("mod-reveal-active");
+
+          // Stop observing this element once it has been animated (one-time reveal)
+          observer.unobserve(el);
+        }
       });
+    },
+    {
+      // Options: Trigger when 10% of the element is visible
+      threshold: 0.1,
+    }
+  );
 
-      const handleScroll = (isInitialLoad = false) => {
-        const currentScrollY = window.scrollY;
-        const direction = currentScrollY > lastScrollY ? "down" : "up";
-        lastScrollY = currentScrollY;
+  // 2. Find all elements and set initial state
+  const els = document.querySelectorAll(selector);
 
-        els.forEach((el, index) => {
-          const rect = el.getBoundingClientRect();
-          let st = stateMap.get(el) || { animated: false };
+  // We can remove the 500ms timeout now, as Intersection Observer handles timing efficiently
+  els.forEach((el) => {
+    // Add the idle class to set the initial hidden state
+    el.classList.add("mod-reveal-idle");
 
-          if (!st.animated && rect.bottom > 0 && rect.top < windowH && (direction === "down" || isInitialLoad)) {
-            // 💡 NEW: Trigger animation by adding the active class
-            el.classList.add("mod-reveal-active");
-            st.animated = true;
-          }
+    // Start observing the element
+    observer.observe(el);
+  });
+};
 
-          if (st.animated && direction === "up") {
-            if (NONE_SCROLL_UP === true) {
-              if (rect.top >= windowH) {
-                // 💡 NEW: Reset animation by removing the active class
-                el.classList.remove("mod-reveal-active");
-                st.animated = false;
-              }
-            } else {
-              if (!isInitialLoad && index !== 0 && (rect.top >= windowH || rect.bottom >= windowH)) {
-                // 💡 NEW: Reset animation by removing the active class
-                el.classList.remove("mod-reveal-active");
-                st.animated = false;
-              }
-            }
-          }
-          stateMap.set(el, st);
-        });
-      };
+// 3. Expose the function globally (Necessary for CDN use)
+window.ModAOSInit = ModAOSInit;
 
-      $(window).on("scroll resize", () => handleScroll(false));
-
-      handleScroll(true);
-    });
-  }, 500);
-}
+// 4. Standard DOM Ready Check (Replaces the unreliable setTimeout/jQuery wrapper)
+document.addEventListener("DOMContentLoaded", () => {
+  // Automatically run the initialization with the default selector
+  // Your HTML page should call this if you aren't using the default selector
+  ModAOSInit();
+});
