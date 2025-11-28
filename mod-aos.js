@@ -1,17 +1,18 @@
-// mod-aos.js (Final CDN Version)
+// mod-aos.js (Final CDN Version - FIXED)
 
-// Note: The function itself remains the same, but the automatic execution is removed.
 const ModAOSInit = (selector = ".mod-aos") => {
-  // The selector default is changed to match the CSS base class name
-
-  // 1. Setup the Intersection Observer
   const observer = new IntersectionObserver(
     (entries, observer) => {
       entries.forEach((entry) => {
         const el = entry.target;
 
         if (entry.isIntersecting) {
+          // 🛑 CRITICAL FIX: Remove the hidden state class first!
+          el.classList.remove("mod-reveal-idle");
+
+          // Trigger Reveal: Add the active class to start animation
           el.classList.add("mod-reveal-active");
+
           observer.unobserve(el);
         }
       });
@@ -21,17 +22,14 @@ const ModAOSInit = (selector = ".mod-aos") => {
     }
   );
 
-  // 2. Find all elements and set initial state
   const els = document.querySelectorAll(selector);
 
   els.forEach((el) => {
+    // Add the idle class to set the initial hidden state
     el.classList.add("mod-reveal-idle");
     observer.observe(el);
   });
 };
 
-// 3. Expose the function globally (CRITICAL LINE)
 window.ModAOSInit = ModAOSInit;
-
-// 4. ***REMOVE THE AUTOMATIC document.addEventListener BLOCK***
-// The user will call the function directly in their HTML.
+// REMOVED: document.addEventListener block
