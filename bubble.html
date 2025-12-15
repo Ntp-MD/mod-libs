@@ -1,0 +1,62 @@
+<script>
+  $(document).ready(() => {
+    const container = document.getElementById("menusub690850c8165eb80013b205dd");
+    const $container = $(container);
+    const width = $container.width();
+    const height = $container.height();
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    canvas.style.position = "absolute";
+    canvas.style.top = "0";
+    canvas.style.left = "0";
+    canvas.style.pointerEvents = "none";
+    $container.append(canvas);
+    const ctx = canvas.getContext("2d");
+
+    // --- Bubble parameters ---
+    const bubbleCount = 15;
+    const bubbles = [];
+
+    for (let i = 0; i < bubbleCount; i++) {
+      bubbles.push({
+        x: Math.random() * width,
+        y: height + Math.random() * height, // start below
+        radius: 10 + Math.random() * 20,
+        speedY: 0.5 + Math.random() * 1.5,
+        angleOffset: Math.random() * Math.PI * 2,
+        wobble: Math.random() * 2,
+      });
+    }
+
+    let time = 0;
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+
+      bubbles.forEach((b) => {
+        // move bubble upwards
+        b.y -= b.speedY;
+        // horizontal wobble
+        b.x += Math.sin(time + b.angleOffset) * 0.5;
+
+        // reset if off top
+        if (b.y + b.radius < 0) {
+          b.y = height + b.radius;
+          b.x = Math.random() * width;
+        }
+
+        ctx.fillStyle = "rgba(0,150,255,0.5)";
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      time += 0.05;
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  });
+</script>

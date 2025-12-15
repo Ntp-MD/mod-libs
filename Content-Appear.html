@@ -1,0 +1,56 @@
+<script>
+  if (AppName === "AppClient") {
+    setTimeout(() => {
+      $(() => {
+        const els = document.querySelectorAll(".content");
+        const stateMap = new Map();
+        let lastScrollY = window.scrollY;
+        const NONE_SCROLL_UP = false; // TOGGLE
+
+        const settings = { distants: 50, durations: 1 };
+        const windowH = window.innerHeight;
+        const idleStyle = `opacity: 0; transform: translateY(${settings.distants}px);`;
+        const triggerStyle = `opacity ${settings.durations}s ease, transform ${settings.durations}s ease`;
+
+        els.forEach((el) => {
+          el.style.cssText = `${idleStyle} transition: ${triggerStyle}`;
+        });
+
+        const handleScroll = (isInitialLoad = false) => {
+          const currentScrollY = window.scrollY;
+          const direction = currentScrollY > lastScrollY ? "down" : "up";
+          lastScrollY = currentScrollY;
+
+          els.forEach((el, index) => {
+            const rect = el.getBoundingClientRect();
+            let st = stateMap.get(el) || { animated: false };
+
+            if (!st.animated && rect.bottom > 0 && rect.top < windowH && (direction === "down" || isInitialLoad)) {
+              el.style.cssText = `opacity: 1; transform: translateY(0); transition: ${triggerStyle}`;
+              st.animated = true;
+            }
+
+            if (st.animated && direction === "up") {
+              if (NONE_SCROLL_UP === true) {
+                if (rect.top >= windowH) {
+                  el.style.cssText = `${idleStyle} transition: ${triggerStyle}`;
+                  st.animated = false;
+                }
+              } else {
+                if (!isInitialLoad && index !== 0 && (rect.top >= windowH || rect.bottom >= windowH)) {
+                  el.style.cssText = `${idleStyle} transition: ${triggerStyle}`;
+                  st.animated = false;
+                }
+              }
+            }
+            stateMap.set(el, st);
+          });
+        };
+
+        $(window).on("scroll resize", () => handleScroll(false));
+
+        handleScroll(true);
+      });
+    }, 500);
+  }
+</script>

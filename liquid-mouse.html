@@ -1,0 +1,123 @@
+<script>
+  $(document).ready(() => {
+    const container = document.getElementById("menusub690850c8165eb80013b205dd");
+    const $container = $(container);
+    const width = $container.width();
+    const height = $container.height();
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    canvas.style.position = "absolute";
+    canvas.style.top = "0";
+    canvas.style.left = "0";
+    canvas.style.right = "0";
+    canvas.style.width = "100%";
+    canvas.style.pointerEvents = "none";
+    $container.append(canvas);
+    const ctx = canvas.getContext("2d");
+
+    const blob = {
+      points: 20,
+      angles: [],
+      noiseOffsets: [],
+      maxWidth: 50,
+      maxHeight: 70,
+      targetWidth: 50,
+      targetHeight: 70,
+      vx: 0,
+      vy: 0,
+    };
+
+    for (let i = 0; i < blob.points; i++) {
+      blob.angles.push((i / blob.points) * Math.PI * 2);
+      blob.noiseOffsets.push(Math.random() * 100);
+    }
+
+    let mouseX = width / 2,
+      mouseY = height / 2;
+    $container.on("mousemove touchmove", (e) => {
+      let pageX, pageY;
+      if (e.originalEvent.touches) {
+        pageX = e.originalEvent.touches[0].pageX;
+        pageY = e.originalEvent.touches[0].pageY;
+      } else {
+        pageX = e.pageX;
+        pageY = e.pageY;
+      }
+      const offset = $container.offset();
+      mouseX = pageX - offset.left;
+      mouseY = pageY - offset.top;
+    });
+
+    let time = 0;
+
+    // trail positions for tail
+    const trail = [];
+    const maxTrail = 25;
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+
+      // velocity toward mouse
+      const dx = mouseX - (trail[0]?.x || mouseX);
+      const dy = mouseY - (trail[0]?.y || mouseY);
+      blob.vx += (dx - blob.vx) * 0.15;
+      blob.vy += (dy - blob.vy) * 0.15;
+
+      const headX = (trail[0]?.x || mouseX) + blob.vx * 0.1;
+      const headY = (trail[0]?.y || mouseY) + blob.vy * 0.1;
+
+      // add head to trail
+      trail.unshift({ x: headX, y: headY, vx: blob.vx, vy: blob.vy });
+      if (trail.length > maxTrail) trail.pop();
+
+      // smooth size change
+      if (Math.abs(blob.maxWidth - blob.targetWidth) < 1) blob.targetWidth = 40 + Math.random() * 30;
+      if (Math.abs(blob.maxHeight - blob.targetHeight) < 1) blob.targetHeight = 40 + Math.random() * 30;
+      blob.maxWidth += (blob.targetWidth - blob.maxWidth) * 0.05;
+      blob.maxHeight += (blob.targetHeight - blob.maxHeight) * 0.05;
+
+      // draw tail + head as “sperm-like” shape
+      for (let i = 0; i < trail.length; i++) {
+        const t = trail[i];
+        const factor = 1 - i / trail.length; // smaller and more transparent for tail
+        const points = [];
+        for (let j = 0; j < blob.points; j++) {
+          const angle = blob.angles[j];
+          const noise = Math.sin(time + blob.noiseOffsets[j]) * 5;
+
+          // stretch tail along velocity
+          const stretchX = 1 + t.vx * 0.02 * factor;
+          const stretchY = 1 + t.vy * 0.02 * factor;
+
+          // shrink tail gradually
+          const rX = blob.maxWidth * stretchX * factor + noise;
+          const rY = blob.maxHeight * stretchY * factor + noise;
+
+          const x = t.x + Math.cos(angle) * rX;
+          const y = t.y + Math.sin(angle) * rY;
+          points.push({ x, y });
+        }
+
+        ctx.fillStyle = `rgba(207,232,175,${0.5 * factor})`;
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let k = 1; k < points.length; k++) {
+          const midX = (points[k - 1].x + points[k].x) / 2;
+          const midY = (points[k - 1].y + points[k].y) / 2;
+          ctx.quadraticCurveTo(points[k - 1].x, points[k - 1].y, midX, midY);
+        }
+        const midX = (points[points.length - 1].x + points[0].x) / 2;
+        const midY = (points[points.length - 1].y + points[0].y) / 2;
+        ctx.quadraticCurveTo(points[points.length - 1].x, points[points.length - 1].y, midX, midY);
+        ctx.fill();
+      }
+
+      time += 0.1;
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  });
+</script>
