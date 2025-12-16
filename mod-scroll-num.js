@@ -1,114 +1,85 @@
 /**
- * * @param {string} selector - The CSS selector for the number elements (Default: ".set_num").
+ * @param {string} selector - CSS selector (default: ".set_num")
+ * @param {object} config
+ *   - once: true  (run once, default)
+ *   - duration: 1500
+ *
+ * HTML:
+ * <div class="set_num" data-start="0" data-stop="100" data-decimals="false"></div>
+ *
+ * JS:
+ * ModNumInit();
+ * ModNumInit(".set_num", { once: false });
  */
-window.ModCounterInit = function (selector = ".set_num") {
-  // Check if jQuery is loaded (CRITICAL DEPENDENCY CHECK)
+window.ModNumInit = function (selector = ".set_num", config = {}) {
   if (typeof jQuery === "undefined") {
-    console.error("ModCounterInit Error: jQuery is required but was not found. Please load the jQuery CDN first.");
+    console.error("ModNumInit Error: jQuery is required.");
     return;
   }
 
-  // Safety check for the original 'AppName' condition (If needed, otherwise remove)
-  if (typeof AppName !== "undefined" && AppName !== "AppClient") {
-    return;
-  }
+  if (typeof AppName !== "undefined" && AppName !== "AppClient") return;
 
-  // 1. Core Animation Function (Internal use only)
-  function ModNumberRun(obj, start, end, duration, onComplete = () => {}, options = {}) {
+  const settings = {
+    once: true,
+    duration: 1500,
+    ...config,
+  };
+
+  function ModNumberRun(el, start, end, duration, options = {}) {
     const { decimals = false, decimalPlaces = 2 } = options;
-    let startTimestamp = null;
+    let startTs = null;
 
-    const step = (timestamp) => {
-      if (!startTimestamp) startTimestamp = timestamp;
-      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      let value = progress * (end - start) + start;
+    function step(ts) {
+      if (!startTs) startTs = ts;
+      const p = Math.min((ts - startTs) / duration, 1);
+      let v = start + (end - start) * p;
 
-      // Set current value
-      // We ensure we only display the integer part during animation for cleaner look
-      obj.innerHTML = Math.floor(value).toLocaleString();
+      el.innerHTML = Math.floor(v).toLocaleString();
 
-      if (progress < 1) {
-        window.requestAnimationFrame(step);
+      if (p < 1) {
+        requestAnimationFrame(step);
       } else {
-        // Final value formatting
-        if (decimals) {
-          value = value.toFixed(decimalPlaces);
-        } else {
-          value = Math.floor(value);
-        }
-        obj.innerHTML = parseFloat(value).toLocaleString();
-        onComplete();
+        v = decimals ? v.toFixed(decimalPlaces) : Math.floor(v);
+        el.innerHTML = Number(v).toLocaleString();
       }
-    };
-
-    window.requestAnimationFrame(step);
-  }
-
-  // 2. Initialize jQuery ready state
-  $(document).ready(function () {
-    const elements = document.querySelectorAll(selector);
-    let animatedElements = new Map();
-    let lastScrollTop = window.pageYOffset;
-
-    // Helper function to check scroll direction
-    function getScrollDirection() {
-      const st = window.pageYOffset || document.documentElement.scrollTop;
-      const direction = st > lastScrollTop ? "down" : "up"; // FIX: Down is scroll-down, Up is scroll-up
-      lastScrollTop = st <= 0 ? 0 : st;
-      return direction;
     }
 
-    // Main scroll handler function
+    requestAnimationFrame(step);
+  }
+
+  $(function () {
+    const elements = document.querySelectorAll(selector);
+    const state = new Map();
+
     function handleScroll() {
-      const direction = getScrollDirection();
+      const vh = window.innerHeight;
 
-      elements.forEach((element) => {
-        const rect = element.getBoundingClientRect();
-        const elementTop = rect.top;
-        const elementBottom = rect.bottom;
-        const windowHeight = window.innerHeight;
+      elements.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        const inView = rect.top <= vh * 0.75 && rect.bottom >= 0;
 
-        const animationState = animatedElements.get(element) || { animated: false };
+        const s = state.get(el) || { done: false };
 
-        // Trigger condition: Element must be between 50% of screen height and the bottom edge
-        const triggerZone = elementTop <= windowHeight * 0.75 && elementBottom >= 0;
+        const allowRepeat = !settings.once || el.getAttribute("data-repeat") === "true";
 
-        // We simplify the trigger logic for this pattern:
-        // Only animate if scrolling DOWN and entering the trigger zone, OR scrolling UP and entering the trigger zone.
-        if (triggerZone && !animationState.animated) {
-          const startValue = parseFloat(element.getAttribute("data-start") || 0);
-          const endValue = parseFloat(element.getAttribute("data-stop") || element.getAttribute("data-value"));
-          const options = {
-            // Note: If data-decimals is NOT present or is set to "true", decimals will be true.
-            decimals: element.getAttribute("data-decimals") !== "false",
-            decimalPlaces: parseInt(element.getAttribute("data-places")) || 2,
-          };
+        if (!inView || (s.done && !allowRepeat)) return;
 
-          // The onComplete callback resets the animated state
-          const onComplete = () => {
-            // Mark as complete, but allow re-animation if scrolled away and back (if needed later)
-            // For a counter, usually we want it to run once. We keep the map update here.
-          };
+        const start = parseFloat(el.getAttribute("data-start")) || 0;
+        const end = parseFloat(el.getAttribute("data-stop")) || parseFloat(el.getAttribute("data-value"));
 
-          ModNumberRun(element, startValue, endValue, 1500, onComplete, options);
-          animationState.animated = true;
-        } else if (!triggerZone) {
-          // Reset animation state when element is completely out of view (allowing re-animation)
-          animationState.animated = false;
-        }
+        if (isNaN(end)) return;
 
-        animatedElements.set(element, animationState);
+        ModNumberRun(el, start, end, settings.duration, {
+          decimals: el.getAttribute("data-decimals") !== "false",
+          decimalPlaces: parseInt(el.getAttribute("data-places")) || 2,
+        });
+
+        s.done = true;
+        state.set(el, s);
       });
     }
 
-    // Attach the scroll listener using jQuery
-    $(window).scroll(handleScroll);
-
-    // Run an initial check on load
-    $(window).on("load", function () {
-      animatedElements.clear();
-      lastScrollTop = window.pageYOffset;
-      handleScroll(); // Initial check
-    });
+    $(window).on("scroll", handleScroll);
+    $(window).on("load", handleScroll);
   });
 };

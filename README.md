@@ -12,3 +12,7 @@
         });
     });
 </script>
+
+    <script>
+      ModAosInit(".content", { scrollUp: false });
+    </script>
