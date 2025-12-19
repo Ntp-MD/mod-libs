@@ -1,11 +1,6 @@
-/**
- * scroll-reveal-legacy.js
- * * NOTE: This script requires jQuery to be loaded BEFORE this file.
- * It uses the less efficient scroll-event listener method.
- * @param {string} selector - The CSS selector for elements (e.g., '.content').
- * @param {object} options - Configuration options.
- * @param {boolean} options.scrollUp - If true, elements DO NOT reset on scroll up. (Default: false)
- */
+// scroll-reveal-legacy.js
+//  <script> ModAosInit(".content", { scrollUp: false }); </script>
+
 window.ModAosInit = function (selector = ".content", options = {}) {
   // Check if jQuery is loaded (CRITICAL DEPENDENCY CHECK)
   if (typeof jQuery === "undefined") {

@@ -1,10 +1,14 @@
-/**
- * mod-webgl-ripples.js (jQuery Plugin Wrapper for WebGL Ripples)
- * * * WARNING: This script requires jQuery to be loaded BEFORE this file.
- * * It uses the WebGL API, which must be supported by the user's browser.
- * * The global function ModWebGlRipplesInit executes the plugin definition,
- * registering $.fn.ripples().
- */
+// <script>
+//    if (window.ModWebGlRipplesInit) { ModWebGlRipplesInit(); }
+//
+//    $(document).ready(function () {
+//       $("#target").ripples({
+//         resolution: 512,
+//         perturbance: 0.04,
+//       });
+//     });
+// </script>
+
 window.ModWebGlRipplesInit = function () {
   // CRITICAL: Check for jQuery dependency before proceeding.
   if (typeof window.jQuery === "undefined") {

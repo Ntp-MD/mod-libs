@@ -1,16 +1,7 @@
-/**
- * @param {string} selector - CSS selector (default: ".set_num")
- * @param {object} config
- *   - once: true  (run once, default)
- *   - duration: 1500
- *
- * HTML:
- * <div class="set_num" data-start="0" data-stop="100" data-decimals="false"></div>
- *
- * JS:
- * ModNumInit();
- * ModNumInit(".set_num", { once: false });
- */
+// mod-scroll-num.js made for personal
+// <div class="set_num" data-start="0" data-stop="100" data-decimals="false"></div>
+// ModNumInit(); * ModNumInit(".set_num", { once: false });
+
 window.ModNumInit = function (selector = ".set_num", config = {}) {
   if (typeof jQuery === "undefined") {
     console.error("ModNumInit Error: jQuery is required.");
