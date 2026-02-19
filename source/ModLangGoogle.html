@@ -1,0 +1,206 @@
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<script>
+  // 20/1/2026   add split insert for mobile
+  if (AppName === "AppClient" && !window.__langWidgetInitialized) {
+    window.__langWidgetInitialized = true;
+    const STORAGE_KEY = "preferredLanguage",
+      DEFAULT_LANG = "th",
+      FLAG_CDN = "https://flagcdn.com/w40/";
+    const langData = [
+      ["th", "Thai", "th"],
+      ["en", "English", "gb"],
+      ["zh-CN", "Chinese", "cn"],
+      ["ja", "Japanese", "jp"],
+      ["ko", "Korean", "kr"],
+      ["hi", "Hindi", "in"],
+      ["ar", "Arabic", "sa"],
+      ["de", "German", "de"],
+      ["it", "Italian", "it"],
+      ["es", "Spanish", "es"],
+      ["pt", "Portuguese", "pt"],
+      ["fr", "French", "fr"],
+      ["ru", "Russian", "ru"],
+    ];
+    const flags = Object.fromEntries(langData.map(([code, label, country]) => [code, { label, img: `${FLAG_CDN}${country}.png` }]));
+
+    const $ = (s, r) => document.querySelector(s);
+    const saveLang = (l) => {
+      try {
+        localStorage.setItem(STORAGE_KEY, l);
+      } catch (e) {}
+    };
+    const getLang = () => {
+      try {
+        return localStorage.getItem(STORAGE_KEY) || DEFAULT_LANG;
+      } catch (e) {
+        return DEFAULT_LANG;
+      }
+    };
+
+    const updateUI = (lang) => {
+      const img = $(".langCurrentImg"),
+        label = $(".langCurrentLabel");
+      if (!img || !label) return;
+      const data = flags[lang] || flags[DEFAULT_LANG];
+      img.src = data.img;
+      img.alt = data.label;
+      label.textContent = data.label;
+      document.querySelectorAll(".langFlag").forEach((f) => f.classList.toggle("active", f.dataset.lang === lang));
+    };
+
+    const changeLang = (lang) => {
+      const dd = document.querySelector(".goog-te-combo");
+      if (!dd) return;
+      dd.value = lang;
+      dd.dispatchEvent(new Event("change"));
+      updateUI(lang);
+      saveLang(lang);
+    };
+
+    const resetLang = () => {
+      const btn = $(".langFlag.reset");
+      if (btn) btn.style.pointerEvents = "none";
+      changeLang(DEFAULT_LANG);
+      setTimeout(() => btn && (btn.style.pointerEvents = ""), 400);
+    };
+
+    const init = () => {
+      if ($("#langWidget")) return;
+      const isSmallScreen = window.matchMedia("(max-width: 1200px)").matches;
+      const targetElement = isSmallScreen ? $(".navbar-header") || document.body : document.body;
+      targetElement.insertAdjacentHTML(
+        "beforeend",
+        `<div id="langWidget" translate="no"><div id="google_translate_element" style="display:none"></div><div class="langWrapper"><div class="langCurrent"><div class="langCurrentLabel"></div><img class="langCurrentImg" src="" alt=""/></div></div></div>`,
+      );
+
+      const wrapper = $(".langWrapper");
+      if (!wrapper || $(".langOption")) return;
+
+      const opt = document.createElement("div");
+      opt.className = "langOption";
+      Object.entries(flags).forEach(([lang, { img, label }]) => {
+        const div = document.createElement("div");
+        div.className = "langFlag";
+        div.dataset.lang = lang;
+        div.innerHTML = `<img src="${img}" alt="${label}" loading="lazy"><div>${label}</div>`;
+        div.onclick = () => {
+          changeLang(lang);
+          wrapper.classList.remove("open");
+        };
+        opt.appendChild(div);
+      });
+
+      const reset = document.createElement("div");
+      reset.className = "langFlag reset";
+      reset.innerHTML = `<div>Reset</div>`;
+      reset.onclick = () => {
+        resetLang();
+        wrapper.classList.remove("open");
+      };
+      opt.appendChild(reset);
+      wrapper.appendChild(opt);
+
+      const saved = getLang();
+      updateUI(saved);
+      setTimeout(() => saved !== DEFAULT_LANG && changeLang(saved), 1000);
+
+      document.addEventListener("click", (e) => {
+        if (!wrapper) return;
+        e.target.closest("#langWidget") ? wrapper.classList.toggle("open") : wrapper.classList.remove("open");
+      });
+    };
+
+    window.googleTranslateElementInit = () =>
+      new google.translate.TranslateElement({ pageLanguage: DEFAULT_LANG, autoDisplay: false }, "google_translate_element");
+
+    document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", init) : init();
+  }
+</script>
+
+<style>
+  #language_member_bar {
+    display: none;
+  }
+
+  .skiptranslate iframe {
+    display: none !important;
+  }
+
+  .skiptranslate {
+    margin-top: -40px;
+  }
+
+  @media screen and (min-width: 1201px) {
+    #langWidget {
+      position: fixed;
+      top: 5px;
+      right: 10px;
+      z-index: 10000;
+    }
+  }
+
+  @media screen and (max-width: 1200px) {
+    .langCurrentLabel {
+      display: none;
+    }
+  }
+
+  #langWidget {
+    display: grid;
+    width: fit-content;
+    height: auto;
+  }
+
+  #langWidget img {
+    width: auto;
+    height: 20px;
+    aspect-ratio: 3/2;
+    object-fit: cover;
+    border: 1px solid #eee;
+  }
+
+  .langCurrent {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+  }
+
+  .langFlag {
+    display: flex;
+    align-items: center;
+    text-align: left;
+    gap: 5px;
+    cursor: pointer;
+    padding: 5px 10px;
+    transition: all 0.2s ease;
+    background: #fff;
+    color: #444;
+  }
+
+  .langFlag:hover {
+    background: #e9e9e9;
+    color: #444;
+  }
+
+  .langFlag.active {
+    font-weight: 600;
+  }
+
+  .langOption {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: 5px;
+    box-shadow: 0 0 3px 0 #ccc;
+    height: 0;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  #langWidget:hover .langOption {
+    height: auto;
+  }
+</style>

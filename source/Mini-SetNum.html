@@ -1,18 +1,14 @@
-// ModScrollNum - Number Animation Library
-// Usage: ModScrollNum.init() or ModScrollNum.init({ duration: 1500, once: false, showDecimal: true })
-// HTML: <div class="set_num" data-start="0" data-stop="100" data-decimals="false" data-places="2"></div>
+<div class="set_num" data-start="0" data-stop="100"></div>
+<script>
+  $(document).ready(() => {
+    const config = { duration: 1500, once: false, showDecimal: true };
+    const easeOutQuad = (t) => t * (2 - t);
 
-const ModScrollNum = (function () {
-  const defaultConfig = { duration: 1500, once: false, showDecimal: true };
-  const easeOutQuad = (t) => t * (2 - t);
-  let observer = null;
-
-  function createObserver(config) {
-    return new IntersectionObserver(
+    const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           const el = entry.target;
-          const data = el.dataset;
+          const data = el.dataset; // สั้นและเข้าใจง่าย
 
           if (entry.isIntersecting) {
             if (data.animating === "true") return;
@@ -29,6 +25,7 @@ const ModScrollNum = (function () {
               const useDec = data.decimals !== "false" && config.showDecimal;
               const places = +data.places || 2;
 
+              // แสดงผล
               const displayValue = useDec ? currentValue.toFixed(places) : Math.floor(currentValue);
               el.innerHTML = Number(displayValue).toLocaleString(undefined, {
                 minimumFractionDigits: useDec ? places : 0,
@@ -52,45 +49,7 @@ const ModScrollNum = (function () {
       },
       { threshold: 0.2 },
     );
-  }
 
-  return {
-    init: function (selector = ".set_num", customConfig = {}) {
-      const config = { ...defaultConfig, ...customConfig };
-      observer = createObserver(config);
-
-      if (typeof jQuery !== "undefined") {
-        $(selector).each((_, el) => observer.observe(el));
-      } else {
-        document.querySelectorAll(selector).forEach((el) => observer.observe(el));
-      }
-    },
-
-    destroy: function () {
-      if (observer) {
-        observer.disconnect();
-        observer = null;
-      }
-    },
-
-    observe: function (element) {
-      if (!observer) {
-        observer = createObserver(defaultConfig);
-      }
-      observer.observe(element);
-    },
-
-    unobserve: function (element) {
-      if (observer) {
-        observer.unobserve(element);
-      }
-    },
-  };
-})();
-
-// Auto-initialize if jQuery is available
-if (typeof jQuery !== "undefined" && typeof $ !== "undefined") {
-  $(document).ready(() => {
-    ModScrollNum.init(".set_num");
+    $(".set_num").each((_, el) => observer.observe(el));
   });
-}
+</script>

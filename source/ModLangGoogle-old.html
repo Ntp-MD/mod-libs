@@ -1,0 +1,201 @@
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<script>
+  if (AppName === "AppClient") {
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      `
+    <div id="langWidget" translate="no">
+      <div id="google_translate_element" style="display:none"></div>
+      <div class="langWrapper">
+        <div class="langCurrent">
+          <div class="langCurrentLabel"></div>
+          <img class="langCurrentImg" src="" alt="" />
+        </div>
+      </div>
+    </div>
+  `
+    );
+    const flags = {
+        th: {
+          img: "http://itp1.itopfile.com/ImageServer/z_itp_24092023yxze/0/0/thz-z1012711943253.png",
+          label: "Thai",
+        },
+        en: {
+          img: "http://itp1.itopfile.com/ImageServer/z_itp_24092023yxze/0/0/enz-z1250651373089.png",
+          label: "English",
+        },
+        "zh-CN": {
+          img: "http://itp1.itopfile.com/ImageServer/z_itp_24092023yxze/0/0/cnz-z1316616080120.png",
+          label: "Chinese",
+        },
+        ja: {
+          img: "http://itp1.itopfile.com/ImageServer/z_itp_24092023yxze/0/0/jaz-z637115789814.png",
+          label: "Japanese",
+        },
+        ko: {
+          img: "http://itp1.itopfile.com/ImageServer/z_itp_24092023yxze/0/0/koz-z565226216364.png",
+          label: "Korean",
+        },
+        hi: {
+          img: "http://itp1.itopfile.com/ImageServer/z_itp_24092023yxze/0/0/hiz-z288731134181.png",
+          label: "Hindi",
+        },
+        ar: {
+          img: "http://itp1.itopfile.com/ImageServer/z_itp_24092023yxze/0/0/arz-z283142310286.png",
+          label: "Arabic",
+        },
+        de: {
+          img: "http://itp1.itopfile.com/ImageServer/z_itp_24092023yxze/0/0/dez-z1031264779901.png",
+          label: "German",
+        },
+        it: {
+          img: "http://itp1.itopfile.com/ImageServer/z_itp_24092023yxze/0/0/itz-z1132891346760.png",
+          label: "Italian",
+        },
+        es: {
+          img: "https://itp1.itopfile.com/ImageServer/z_itp_24092023yxze/0/0/esz-z1302903314530.png",
+          label: "Spanish",
+        },
+        pt: {
+          img: "http://itp1.itopfile.com/ImageServer/z_itp_24092023yxze/0/0/ptz-z608490669754.png",
+          label: "Portuguese",
+        },
+        fr: {
+          img: "http://itp1.itopfile.com/ImageServer/z_itp_24092023yxze/0/0/frz-z1421022553509.png",
+          label: "French",
+        },
+        ru: {
+          img: "http://itp1.itopfile.com/ImageServer/z_itp_24092023yxze/0/0/ruz-z1715273191302.png",
+          label: "Russian",
+        },
+      },
+      resetIcon = "https://itp1.itopfile.com/ImageServer/z_itp_24092023yxze/0/0/refreshz-z936732409505.png";
+    window.googleTranslateElementInit = () => new google.translate.TranslateElement({ pageLanguage: "th" }, "google_translate_element");
+    const defaultSelected = (lang) => {
+      const img = document.querySelector(".langCurrentImg"),
+        label = document.querySelector(".langCurrentLabel");
+      (flags[lang] || flags.th) &&
+        ((img.src = (flags[lang] || flags.th).img),
+        (img.alt = (flags[lang] || flags.th).label),
+        (label.textContent = (flags[lang] || flags.th).label));
+    };
+    const changeLanguage = (lang) => {
+      const dd = document.querySelector(".goog-te-combo");
+      if (!dd) return;
+      dd.value = lang;
+      dd.dispatchEvent(new Event("change"));
+      setTimeout(() => defaultSelected(lang), 0);
+    };
+    const resetLanguage = () => {
+      const btn = document.querySelector(".langFlag.reset");
+      if (btn) btn.style.pointerEvents = "none";
+      changeLanguage("th");
+      setTimeout(() => changeLanguage("th"), 200);
+    };
+    $(document).ready(() => {
+      $(document).on("click", (e) =>
+        $(e.target).closest("#langWidget").length ? $(".langWrapper").toggleClass("open") : $(".langWrapper").removeClass("open")
+      );
+      const dd = document.querySelector(".langWrapper");
+      if (!dd) return;
+      const opt = document.createElement("div");
+      opt.className = "langOption";
+      Object.entries(flags).forEach(([lang, { img, label }]) => {
+        const w = document.createElement("div");
+        w.className = "langFlag";
+        w.dataset.lang = lang;
+        w.innerHTML = `<img src="${img}" alt="${label}"><div>${label}</div>`;
+        w.onclick = () => {
+          changeLanguage(lang);
+          const btn = document.querySelector(".langFlag.reset");
+          if (btn) btn.style.pointerEvents = "";
+        };
+        opt.appendChild(w);
+      });
+      const resetDiv = document.createElement("div");
+      resetDiv.className = "langFlag reset";
+      resetDiv.innerHTML = `<img src="${resetIcon}" alt="Reset Language"><div>Reset</div>`;
+      resetDiv.onclick = resetLanguage;
+      opt.appendChild(resetDiv);
+      dd.appendChild(opt);
+      defaultSelected("th");
+    });
+  }
+</script>
+
+<style>
+  #language_member_bar {
+    display: none;
+  }
+
+  .skiptranslate iframe {
+    display: none !important;
+  }
+
+  .skiptranslate {
+    margin-top: -40px;
+  }
+
+  .no-js #langWidget {
+    position: fixed;
+    top: 5px;
+    right: 10px;
+    width: fit-content;
+    height: auto;
+    z-index: 10000;
+    color: #444;
+  }
+
+  #langWidget img {
+    width: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    border: 1px solid #dddddd;
+  }
+
+  .langCurrent {
+    display: grid;
+    grid-template-columns: auto 30px;
+    align-items: center;
+    gap: 5px;
+    justify-items: end;
+  }
+
+  .langFlag {
+    display: grid;
+    grid-template-columns: 30px auto;
+    align-items: center;
+    text-align: left;
+    gap: 5px;
+    cursor: pointer;
+    padding: 5px 10px;
+    color: #fff;
+  }
+
+  .langFlag:hover {
+    background: #fafafa;
+  }
+
+  .langOption {
+    position: relative;
+    top: 5px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 5px;
+    box-shadow: 0 0 3px 0 #ccc;
+    height: 0;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  #langWidget:hover .langOption {
+    height: auto;
+  }
+
+  .langFlag.reset img {
+    display: none;
+  }
+
+  @media screen and (max-width: 992px) {
+  }
+</style>

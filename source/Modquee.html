@@ -1,0 +1,213 @@
+<div id="modquee">
+  <div id="modquee-contain">
+    <div class="modquee-items">
+      <img src="https://itp1.itopfile.com/Images/photos/no-image.jpg" alt="" />
+    </div>
+    <div class="modquee-items">
+      <img src="https://itp1.itopfile.com/Images/photos/no-image.jpg" alt="" />
+    </div>
+    <div class="modquee-items">
+      <img src="https://itp1.itopfile.com/Images/photos/no-image.jpg" alt="" />
+    </div>
+    <div class="modquee-items">
+      <img src="https://itp1.itopfile.com/Images/photos/no-image.jpg" alt="" />
+    </div>
+    <div class="modquee-items">
+      <img src="https://itp1.itopfile.com/Images/photos/no-image.jpg" alt="" />
+    </div>
+    <div class="modquee-items">
+      <img src="https://itp1.itopfile.com/Images/photos/no-image.jpg" alt="" />
+    </div>
+    <div class="modquee-items">
+      <img src="https://itp1.itopfile.com/Images/photos/no-image.jpg" alt="" />
+    </div>
+    <div class="modquee-items">
+      <img src="https://itp1.itopfile.com/Images/photos/no-image.jpg" alt="" />
+    </div>
+    <div class="modquee-items">
+      <img src="https://itp1.itopfile.com/Images/photos/no-image.jpg" alt="" />
+    </div>
+  </div>
+</div>
+
+<style>
+  #modquee {
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    height: 200px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  #modquee-contain {
+    display: flex;
+    position: absolute;
+    inset: 0;
+  }
+
+  .modquee-items {
+    aspect-ratio: 1;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  .modquee-items img {
+    height: auto;
+    width: 100%;
+    border-radius: 0;
+    aspect-ratio: 1;
+    object-fit: contain;
+  }
+</style>
+
+<script>
+  const observer = new MutationObserver(() => {
+    const container = document.querySelector("#modquee");
+    const box = document.querySelector("#modquee-contain");
+    if (!container || !box) return;
+
+    // Speed setting (pixels per second)
+    const speed = Number(container.dataset.speed) || 100;
+
+    // Fixed item width (if set, overrides responsive breakpoints)
+    const itemWidth = Number(container.dataset.itemWidth) || 0;
+
+    const defaultBreakpoints = [
+      { max: 480, width: 50 },
+      { max: 992, width: 80 },
+      { max: 1200, width: 100 },
+      { max: Infinity, width: 180 },
+    ];
+
+    const itemGap = Number(container.dataset.gap) || 15;
+
+    const parseBreakpoints = (value) => {
+      if (!value) return defaultBreakpoints;
+      const parsed = value
+        .split(",")
+        .map((pair) => pair.trim())
+        .filter(Boolean)
+        .map((pair) => {
+          const [maxStr, widthStr] = pair.split(":").map((v) => v.trim());
+          const max = Number(maxStr);
+          const width = Number(widthStr);
+          if (!Number.isFinite(max) || !Number.isFinite(width)) return null;
+          return { max, width };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.max - b.max);
+      return parsed.length ? parsed : defaultBreakpoints;
+    };
+
+    const getItemWidth = (screenWidth) => {
+      const config = parseBreakpoints(container.dataset.breakpoints);
+      const match = config.find((bp) => screenWidth <= bp.max) || config[config.length - 1];
+      return Math.max(1, match.width);
+    };
+
+    const applyItemsPerView = () => {
+      box.style.gap = `${itemGap}px`;
+
+      const finalWidth = itemWidth > 0 ? itemWidth : getItemWidth(container.clientWidth || 1);
+
+      box.querySelectorAll(".modquee-items").forEach((item) => {
+        item.style.flex = `0 0 ${finalWidth}px`;
+        item.style.width = `${finalWidth}px`;
+      });
+    };
+
+    const rebuild = () => {
+      if (!box.dataset.original) box.dataset.original = box.innerHTML;
+      box.innerHTML = box.dataset.original;
+
+      container.querySelectorAll('[data-marquee-clone="true"]').forEach((el) => el.remove());
+
+      applyItemsPerView();
+
+      const imgs = box.querySelectorAll("img");
+      let loaded = 0;
+      const onLoad = () => {
+        loaded++;
+        if (loaded === imgs.length) setup();
+      };
+
+      if (imgs.length === 0) setup();
+      imgs.forEach((img) => {
+        if (img.complete) onLoad();
+        else img.onload = img.onerror = onLoad;
+      });
+    };
+
+    function setup() {
+      const containerWidth = container.clientWidth;
+      let boxWidth = box.scrollWidth;
+
+      let cloneCount = 0;
+      while (boxWidth < containerWidth * 3 && cloneCount < 20) {
+        const clone = box.cloneNode(true);
+        clone.querySelectorAll("img").forEach((img) => (img.loading = "lazy"));
+        box.appendChild(...clone.childNodes);
+        boxWidth = box.scrollWidth;
+        cloneCount++;
+      }
+      const duration = boxWidth / speed + "s"; // Speed control
+
+      document.querySelectorAll("style[data-marquee]").forEach((el) => el.remove());
+
+      const style = document.createElement("style");
+      style.setAttribute("data-marquee", "true");
+      style.innerHTML = `
+      @keyframes slideLeft {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-${boxWidth + itemGap}px); }
+      }
+      @keyframes slideLeftClone {
+        0% { transform: translateX(${boxWidth + itemGap}px); }
+        100% { transform: translateX(0); }
+      }
+    `;
+      document.head.appendChild(style);
+
+      // Style container and box
+      Object.assign(container.style, {
+        position: "relative",
+      });
+
+      Object.assign(box.style, {
+        position: "absolute",
+        left: "0",
+        top: "0",
+        whiteSpace: "nowrap",
+        zIndex: "1",
+        animation: `slideLeft ${duration} linear infinite`,
+      });
+
+      // Clone and animate second set
+      const animClone = box.cloneNode(true);
+      animClone.setAttribute("data-marquee-clone", "true");
+      Object.assign(animClone.style, {
+        position: "absolute",
+        left: "0",
+        top: "0",
+        whiteSpace: "nowrap",
+        zIndex: "2",
+        transform: `translateX(${boxWidth + itemGap}px)`,
+        animation: `slideLeftClone ${duration} linear infinite`,
+      });
+      container.appendChild(animClone);
+    }
+
+    let resizeTimer;
+    const onResize = () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(rebuild, 150);
+    };
+
+    rebuild();
+    window.addEventListener("resize", onResize);
+    observer.disconnect();
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+</script>
