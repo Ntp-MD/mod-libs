@@ -1,52 +1,61 @@
 /**
  * ModFillText.js v1.0.0
  * Copyright (c) 2026 idea by Natthapon Srimode
- * * ความภูมิใจของนักพัฒนา: ระบบปรับขนาดฟอนต์อัตโนมัติตามสัดส่วนพื้นที่
- * - คำนวณจาก Pixel จริง ไม่ใช่วิธีกะระยะ
- * - ควบคุมผ่าน HTML Attributes 100%
- * - รองรับ Responsive และ Google Fonts
  */
-
-$(function () {
+(function ($) {
   const modResizer = function () {
     $("[AimSize]").each(function () {
-      var $el = $(this);
-      var $parent = $el.closest("[parent-mark]").length ? $el.closest("[parent-mark]") : $el.parent();
+      const $el = $(this);
+      const $parent = $el.closest("[parent-mark]").length ? $el.closest("[parent-mark]") : $el.parent();
 
-      var fillPercent = parseFloat($el.attr("AimSize")) || 100;
-      var minSize = parseFloat($el.attr("MinSize")) || 0;
-      var parentWidth = $parent.innerWidth();
+      // ดึงค่าและลบ % ออกถ้ามี
+      let rawAim = $el.attr("AimSize") || "100";
+      const fillPercent = parseFloat(rawAim.replace("%", "")) || 100;
+      const minSize = parseFloat($el.attr("MinSize")) || 0;
+
+      const parentWidth = $parent.innerWidth();
       if (parentWidth <= 0) return;
 
-      var targetWidth = parentWidth * (fillPercent / 100);
+      const targetWidth = parentWidth * (fillPercent / 100);
 
       // --- ระบบวัดขนาดด้วย Canvas ---
-      var text = $el.text();
-      var fontInfo = $el.css("font-weight") + " 100px " + $el.css("font-family");
-      var canvas = document.createElement("canvas");
-      var context = canvas.getContext("2d");
+      const text = $el.text().trim();
+      const style = window.getComputedStyle($el[0]);
+      const fontInfo = `${style.fontWeight} 100px ${style.fontFamily}`;
+
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
       context.font = fontInfo;
-      var currentWidth = context.measureText(text).width;
+      const currentWidth = context.measureText(text).width;
 
       if (currentWidth > 0) {
-        var newFontSize = (targetWidth / currentWidth) * 100;
+        let newFontSize = (targetWidth / currentWidth) * 100;
         if (newFontSize < minSize) newFontSize = minSize;
 
         $el.css({
           "font-size": newFontSize + "px",
           display: "block",
           "white-space": "nowrap",
+          "line-height": "1.2", // ป้องกันบรรทัดซ้อนกันเมื่อฟอนต์ใหญ่ขึ้น
         });
       }
     });
   };
 
-  if (document.fonts) {
-    document.fonts.ready.then(modResizer);
-  }
-  $(window).on("resize", function () {
-    clearTimeout(this.t);
-    this.t = setTimeout(modResizer, 100);
+  $(function () {
+    if (document.fonts) {
+      document.fonts.ready.then(modResizer);
+    }
+
+    let t;
+    $(window).on("resize", function () {
+      clearTimeout(t);
+      t = setTimeout(modResizer, 150);
+    });
+
+    // รันทันที
+    modResizer();
+    // รันซ้ำอีกครั้งเผื่อกรณีรูปภาพหรือ layout ขยับทีหลัง
+    setTimeout(modResizer, 500);
   });
-  modResizer();
-});
+})(jQuery);
