@@ -2,10 +2,11 @@
 // Usage: ModScrollNum.init() or ModScrollNum.init({ duration: 1500, once: false, showDecimal: true })
 // HTML: <div class="set_num" data-start="0" data-stop="100" data-decimals="false" data-places="2"></div>
 
-const ModScrollNum = (function () {
+window.ModScrollNum = (function () {
   const defaultConfig = { duration: 1500, once: false, showDecimal: true };
   const easeOutQuad = (t) => t * (2 - t);
   let observer = null;
+  let isInitialized = false;
 
   function createObserver(config) {
     return new IntersectionObserver(
@@ -54,22 +55,28 @@ const ModScrollNum = (function () {
     );
   }
 
+  console.log("ModScrollNum library loaded successfully");
+
   return {
     init: function (selector = ".set_num", customConfig = {}) {
       const config = { ...defaultConfig, ...customConfig };
       observer = createObserver(config);
+      isInitialized = true;
 
       if (typeof jQuery !== "undefined") {
         $(selector).each((_, el) => observer.observe(el));
       } else {
         document.querySelectorAll(selector).forEach((el) => observer.observe(el));
       }
+
+      console.log("ModScrollNum initialized with selector:", selector);
     },
 
     destroy: function () {
       if (observer) {
         observer.disconnect();
         observer = null;
+        isInitialized = false;
       }
     },
 
@@ -85,12 +92,31 @@ const ModScrollNum = (function () {
         observer.unobserve(element);
       }
     },
+
+    isInitialized: function () {
+      return isInitialized;
+    },
   };
 })();
 
-// Auto-initialize if jQuery is available
-if (typeof jQuery !== "undefined" && typeof $ !== "undefined") {
-  $(document).ready(() => {
-    ModScrollNum.init(".set_num");
+// Auto-initialize on DOM ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    if (typeof jQuery !== "undefined") {
+      $(document).ready(() => {
+        ModScrollNum.init(".set_num");
+      });
+    } else {
+      ModScrollNum.init(".set_num");
+    }
   });
+} else {
+  // DOM already loaded
+  if (typeof jQuery !== "undefined") {
+    $(document).ready(() => {
+      ModScrollNum.init(".set_num");
+    });
+  } else {
+    ModScrollNum.init(".set_num");
+  }
 }
